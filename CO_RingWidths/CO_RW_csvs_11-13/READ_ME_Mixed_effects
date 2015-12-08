@@ -1,0 +1,423 @@
+Readme:
+Mixed Effects Modeling of PIPO:
+Leander DL Anderegg
+Started: 11/2013
+
+1/24-26/2014
+
+1) Added sparkplot function (in seperate script), and xyplots of rwi and climate variables
+
+2) outsourced core truncation and detrending to a function core.clean (in script)
+then renamed core_clean into core_trunc() (and file into fn_core_trunc.R), a function that takes a data frame from core_average, truncates it into the timeseries desired, and then optionally detrends it. Also changed the file name of the core_average() from core_averaging_detrending to fn_core_average.R
+-- New naming convention: function files shall be fn_function_name.R
+I hopefully got all the old function and file references in Mix_effects_try1.R and Competition Analysis11_11_13.R
+
+3) Als tested out mixed effects structures and found:
+- that Year random slope and intercept takes FOREVER to run and sucks
+- that (1|Year) is pretty much the best, but that (1|Tree) + (1|Year) is close
+  behind, typically only different in AIC by 2 ish
+- The 1|Year being best holds for all three elevations
+
+4) updated the climate variable manipulation and combination of rwi with clim
+   so that it's easy to do with all climates,
+   that it automatically pulls out the right competition letter (H vs L) depending  
+   on the elevation,
+   and so it adds in an "Elev" column for future use.
+
+5) finalized the climate vairables to use, deciding which ones are highly colinear. see documentation in Mixed_effects_try1.R file for more.
+
+6) tested which of the summer and winter T and Precip variables I should focus on.
+The Takehome (after trying variables alone and with others and seeing 
+ where AIC differences lined up):
+Summer T: TmaxAn and ErefGS are close and depend on whether alone or with PPT. 
+          TaveGS sucks
+Winter T: TminAn and TaveWin are essentially identical, and 
+          TminAn more physiological?
+Summer P: CMDGS is slightly better than PPTGS with other variables, 
+          and considerably better alone
+Winter P: PPTWin def better than PASAn
+Annual P: PPTAn acutlally beats CMDAn typically
+
+**best choices based on fiddling and AIC
+* model to test because not seasonal
+
+## Possible T combos: ##
+**  # TmaxAn + TminAn, (TmaxAn * TminAn)
+    # TaveGS + TaveWin, (TaveGS * TaveWin)
+    # TaveGS + TminAn
+*   # ErefGS + TminAn
+    # ErefGS + TaveWin
+**  # TmaxAn
+*   # ErefGS # but think I'm going TmaxAn because not colinear with CMD and not   
+      relying on PRISM's likely janky calculation
+**  # TminAn
+
+
+## Possible PPT combos: ## 
+    # PPTGS + PPTWin
+    # PPTGS + PASAn
+**  # CMDGS + PPTWin
+    # CMDGS + PASAn
+    # CMDAn + PPTWin
+    # CMDAn + PASAn
+**  # CMDGS
+**  # PPTWin
+
+# Yearly variables worth throwing down
+*   # TaveAn
+*   # PPTAn
+    # CMDAn # probably worth running just in case?
+
+
+
+##############
+# Possible Model Combinations
+            # Annual Variables #
+value ~ 1
+value ~ PPTAn
+value ~ TaveAn
+value ~ PPTAn + TaveAn
+value ~ PPTAn * TaveAn
+            # Seasonal Temp #
+value ~ TmaxAn
+value ~ TminAn
+value ~ TmaxAn + TminAn
+value ~ TmaxAn * TminAn
+            # Seasonal Precip #
+value ~ CMDSGS
+value ~ PPTWin
+value ~ CMDGS + PPTWin
+value ~ CMDGS * PPTWin
+            # The thorny combinations #
+value ~ TmaxAn + CMDGS
+value ~ TmaxAn * CMDGS
+value ~ TminAn + PPTWin
+value ~ TminAn * PPTWin
+value ~ TmaxAn + PPTWin
+value ~ TmaxAn + TminAn + PPTWin
+value ~ TmaxAn + CMDGS + PPTWin
+value ~ TmaxAn + TminAn + PPTWin + CMDGS
+value ~ TmaxAn * CMDGS + TminAn * PPTWin
+value ~ TminAn + CMDGS
+value ~ TminAn + CMDGS + PPTWin
+
+1/26/14
+just updated fn_core_trunc to include a "drop" term, that drops the first "drop"
+rings of the core to get rid of early squirlyness in cores. This is autoset at 3
+- also idiot-proofed fn_core_trunc a bit to take shorter than desired dataframes without breaking
+
+2/4/14
+recently realized that PRISM data looks super funky (i.e. doesn't show 2002 drought)
+created a master Low Elevation PIPO chronology, which looks very much like Lizard head SNOTEL data but not much like the PRISM precip or T data. Might be a problem with the 4km product,otherwise, not sure why it's not capturing interannual variability correctly. Looks good until about 1998, then falls apart
+
+2/20s/14
+added in some plotting excercises in middle of script post sparkplots code
+
+3/6/14
+Have now concluded that PRISM data are indeed somewhat funky. Compared them in the PRISM_check R script, including to the Cortez station. Cortez has quite a few missing pieces of data.
+
+- working on plots for Beautiful Graphics
+thought: what about distribution of individual slopes behind elevational mean with darkness indicating sensitivity per tree
+
+--------- TAKE HOME POINTS FROM ASSUMPTIONS CHECKS (CO)--------------
+ASPECT: don't have aspect data for POTR Mid yet, but in general aspects look OK across elevations.
+some differences in mean aspect, particularly from high to low elevation ABLA, but in general this histograms look pretty believable.
+
+DBH: 
+PIPO- DBH increases from Low to High elevation --> Doesn't explain growth trend, totally fits with both logging history and growth limitation due to drought at lower elevations
+POTR- DBH increases from Low to High elevation (missing Mid) --> once again, consistent with physiological limitation at low elevation
+ABLA- DBH decreases from Low to High elevation --> at odds with logging history, fits with cold being a physiological limit at high elevation
+- True when I use full dataset from COtreesnew as well
+
+total Basal Area: ok, so high and low competition comparisons are not quite as straight forward as I would like,
+because the high and low treatments pretty much vary between elevations for all species
+
+3/7/14
+Worked on a lot of plots for Beautiful R graphics, all in the CO_assumptionschecks.R file
+- regen bar plot
+- mortality and stand density bar plot
+- abundance barplot or loess smoothed plot from abundance transects
+
+## Edited the fn_core_average.R so that it keeps last partial year
+for BAI calculations and so that you set the last year rather than 
+have it hard coded. This should still be fine feeding into core_trunc()
+
+-created "basal_area_inc()" function which calculates BAI
+-recreated competition x elevation boxplot and aov and results are the same
+
+## started plotting different measures of competition. most of them suck
+-had to rename things "01" in FocalTree_Data_cleaning3_6_14 in order to keep from having conficts (-1H, -10H, -11H etc all show up) when I calculated differences for competition metrics
+- had to clean this up in a variety of ways, both in the csvs and then in the Competition_analysis11_11_13 code.
+
+Once that got sorted out, explored all available competition metrics and the results are:
+PIPO_CompMetrics_v_BAIdifs.pdf
+**** NEED TO CHECK EFFECT OF OUTLIER IN HIGH ELEVATION (super negative point)
+N_Cr: shit for any elev
+BA_tot: best of the bunch. L and LR do the best (lm -> p=0.098 and 0.088, respectively)
+BA_same: looks pretty reasonable, but not significant
+BA_other: pretty shitty MED SHOWS NO VARIABILITY because all PIPO at that elev
+DBH: low competitions were generally larger than H (positive DBH), especially at low elevation. L being bigger explained some of BAI diff at low elev (p=0.07), and the opposite at high elev (L being bigger seemd to have a negative effect, p=0.15). Don't know entirely what to make of this, but I think things are ok.
+in5_tot: pretty uninformative, though trends are in the right direction
+in5_same: not much info here
+in5_dif: no info, and MED SHOW NO VARIABILITY, because all were PIPO
+
+
+3/20/14
+Outsourced most code for figures for R Graphics to seperate scripts, stored in CO_results_figures
+- cleaned up sparkplots function and outsourced figure
+- outsourced PIPO RWI vs Climate plots to new script
+
+4/--/14
+-built summary plots for WA and MT. outsourced each RelAbun plot to its own code for NPS reporting, and then also started WA-Checks and MT-Checks.
+****NEED TO LOOK THROUGH DATA CLEANING NOTES TO MAKE SURE I DIDN'T FORGET TO CHECK SOMETHING
+  I vaguely recall running into a few strange things I needed to check out, but don't remember what they were exactly
+
+- also streamlined code to create csvs for most of the rwi, climate, and master chronology data so that I don't have to rerun code all the time. now can just import them from CSV files and update csvs when I have better climate data.
+
+5/1/14
+-added in a little code after random effects selection looking at residuals. seems to be ok?
+****NEED TO ASK PEOPLE ABOUT WHAT CONSTITUTES A PROBLEM HERE
+- also wanted to check temporal autocorrelation. don't really want to loop through all trees right now, so maybe I'll just do it on the master chronology
+-going to add this to the Mixed effects code. Also, if I want to eventually do this for each core, I'll need to change my combine_rwclim() function because it throws out NAs and I need them in if I have any sections that I pulled out in the middle of cores to preserve the time series.
+    - In the master chronologies, 1yr lags were reasonably significant for some elevations. Dont know exactly what this means. Maybe I'll need to look at the residuals and see what is going on there.
+    - looking at residuals from the "over the top" model fore each core, it looks like
+      PIPO.L has 7/20 trees with pretty significant lag1 autocorrelations.
+    - looking at rwi, fewer seem to show significant lagged autocorr (maybe 4-5/20)
+    _ don't know exactly why this would be.
+
+5/4/14 
+Going to add an AR1 autoccorelation structure and see what we're talking about.
+- Also, after rerunning all of the possible random effects structures, it now appears that nothing with random slopes and intercepts really converges. So I'm not sure I can actually fit a random slopes model. Might just have to stick with random intercepts becasue when I drop out the random slopes of the insiginificant variables it seems like it doesn't improve anything. Don't know why lme4 initially fit these models and has since stopped fitting them. Perhaps I originally only got them to fit because i wasn't including all of the relevant slope terms, only intercepts. 
+
+### What I've learned about AR1 modeling:
+-Zuur has a pretty good description of this, and using it in nlme
+-NAs in the time series are probably a problem. in order to get the time series and the correlations to work out, I probably need to get the full data set without NAs removed and 
+figure out how to na.action them appropriately in lme()
+- R side correlation structures (AR1 correlations, or other correlations structures in the residuals) can only really be dealt with in lme() and not in lme4's lmer(). Not sure how much work it's worth putting in here to fix it.
+- Also, it's becoming somewhat clear that I don't know what I'm doing with formulating random effects (Year and Tree, blocked, crossed?, slopes and intercepts? scaled variables and intercepts? wtf?)
+
+
+############## Following a loooong hiatus ######################
+
+My new game plan:
+1) quick calculate growth trends of POTR with elevation for Alec
+2) Recheck my base functions (core_trunc and core_average) to make sure they're working
+2.5) clean up directory structure.
+3) find good climate data. Maybe from WXTopo or whatever that's called.
+4) process fisheye photos and figure out best way to make competition continuous
+5) figure out detrending and pre-whitening techniques
+6) figure out AR models
+7) attack the fixed effects model structure again.
+
+
+17/12/14 Looking at POTR growth trends for Alec:
+## Rerunning code, and noticed that for POTR mid elevation, Pairs 1-2 are actually labeled "PIPO"
+###### NEED TO CHECK THIS!!!!!!!!!!!! ---> I think I checked this and just needed to rename them because someone F'ed up the naming in Windendro
+## Also, ABLA-M had some cores with varying 01s and 1s and 02s and 2s. So I cleaned that up in CO-ABLA-M-RWdata05_05_14.csv, and CO-ABLA-H-RWdata04_30_14.csv
+# Then, because all PIPO and POTR were 01H then 2H, but ABLA adds 0# to everything, I had to change my tree info spreadsheet. CO_Checks/CO_focaltree_3_6.csv
+
+
+2/18/15 #########################################
+##### Slight side trip down CO2 fert road ######
+* goal of this initial analysis: figure out what range of dates I have if I pick a standard tree size and apply the van der Sleen 2015 method. If I've got a good date range, maybe I can plot up growth ~ time and see what that looks like for PIPO and POTR.
+
+## so I made a new script for this (Cd-CO2_Fert.R), and saved and reimported the PIPO&POTR average ring widths and tree info. I also copied the basal_area_inc() function from Code-Competition_analysis and added a call to spit out just the radius matrix or just the BAI matrix (also got rid of an order thing and replaced it with a warning if rw and tree info aren't ordered correctly)
+
+PIPO analysis:
+minimum tree size is 13.7 cm radius (137mm in PIPO_radius) to the cambium. So I'll try setting 130 as my standard size to see what sort of year distribution I get
+## Note about radii, they = radius of the tree after growth for year X (so something with 2013 ring width ends the year with 2013 radius)
+
+POTR minimum tree size is 80+ mm radiums, so I'll use 80 as my reference value.
+
+2/19/15
+added in ABLA to Code-Competitiona_analysis and saved "ABLA_avgRingWidth_2-19-15.csv" and "ABLA_TreeInfo.csv" files
+
+** Note: ABLA-H-07L and ABLA-M-04L got waaaay off (like final radius ended << -20) so I temporarily got rid of them but need to check their DBHs.
+
+ABLA minimum tree size is 82, but 78 is sufficient for 6yr growth
+
+### 4/10/15 ######
+I added on some code to CD-CO2_Fert.R to save the radius from the BAI calculatations and plot the BAI vs Radius for all trees to get the growth curve. Looks very interesting, and I need to invistigate this much more!!!
+
+However, just for the Traits MS, I plotted 10yr BAI vs DBH to see if I need to include it as a covariate.
+
+
+
+### 7/17/15 ######################
+Ok, finally getting back to this shit. It looks to me like the analyses that I should do are:
+**Easy-
+  1) 10yr mean BAI across elevation for all species just like the CO_Traits project. This will tell me mean growth and the effect of competition
+  2) synchrony for all species. Will tell me first order climate sensitivity
+**Hard-
+  1) mixed-effects model. 
+      - still need to figure out random effects structure. Think I need (0+clim|Tree) to get the appropriate random slopes and no intercept and to get the model to converge.
+      - need to figure out whether (1|Year) is a good thing. my gut is that clim|Year interactions are meaningless, and 1|Year sops up all the variation that my climate can't explain, meaning lags, places where I'm lacking the appropriate climate variable, and major problems with my climate data. It is strange that there are still 1yr lags in the residuals after I include a 1|Year term.
+      - how to deal with AR issue. could use R side modeling in nlme, or could prewhiten?
+      - Maybe I need to throw this down in Baysian land...
+
+
+*Still need to figure out appropriate climate data. 
+*Also need to process fisheye photos.
+*Also should probably extract more accurate elevs using Cd-LatLongtoElev. Maybe aspect as well?
+
+
+7/20/15
+Made a new code in the "whole project" folder to creat raw but clean RW csvs for MT and WA. Manually switched "State" to "Transect" in the original WinDendro csvs
+
+Now trying to get focal tree names to align with RW names. Will match RW so for the time being until I need to do otherwise.
+
+Spent a lot of time fixing little bugs in the MT_focaltree_4-5.csv spreadsheet and the WA_focaltree_4-18.csv (bad heights, etc). The only big problem was WA-TSHE-M-11C, which had a BAF of 0. Also in the Focaltree_data_cleaning_4-6-14.xlsx spreadsheet, I screwed up BA_totL calcs for WA and didn't include live TSHEs in the calculations. This resulted in some negative numbers for calcs that dependend on this. I fixed this in the xlsx spreadhsheet and copied the corrected values into the WA_focaltree_4-18.csv spreadsheet.
+
+#### ON orginal datasheet, need to check WA-TSHE-M-8C in5. 14 is A LOT!
+#### also check for MT_TSHE with 15ish in5_other and another with ~14 in5_same
+  # found 1 mistake in MT_TSHE-H-10C, missing an in5_other bringing it up to 16. changed in focaltree csv.
+
+7/22 had to recheck the goddam BA_xx calcs in the colorado stands and update because I fucked shit up and BA_totLR looked itentical to BA_otherLR in the first pass
+But of course, I had to resort everything before pasting shit back into the ABLA/POTR/PIPOtreeinfo.csv because nothing ever easy
+
+
+7/23/15 (Ericka's B-day!)
+infilled the missing N_Cr in CO_ABLA based on fisheyes. Also filled in the missing height value.
+Then started checking for outliers in all the competative metrics in my datas to uncover problems in the dataset before I get too terribly involved. changes that I had to make:
+* MT-TSHE
+MT-TSHE-L-07C, wrong height becasue bottom and top of canopy switched
+MT_TSHE-H-10C looked like a type cause too many in5, but based on original datasheet actually missing one that I added back
+* MT-PSME. 
+actually looks pretty good
+* MT-ABLA
+ABLA-L-1C looks tall, but just because dist = 11. double checked with original
+
+* CO- all spp -> looks pretty good at this point. ABLA heights a bit dodgy, but I think they're prob just noisy.
+
+*WA-ABLA --> well, a couple strange heights, but they were not misentered (ABLA-M-1N too low and ABLA-L-5C too high). Had to fix N_cr from 13 to 3 for ABLA-L-10C
+
+*WA-PSME
+PSME-M-10C has a huge BAtot, but it seems to be legit
+PSME-L-1N & L-5C are super tall, but probably just noise.
+
+*WA-TSHE
+WA-TSHE-M had 3 or 4 issues with the in5_ data entry. Makes me a little suspicious of how Bryant entered this stuff (GAAAAAH), but I cleared it up. Hopefully it was just the in5 that he really struggled with. Checked all of TSHE-M in5 and looks good now. Luckily, I think Bryant was so slow he probably didn't enter much of this.
+
+
+7/27/15
+Did a lot of preliminary modeling of meanBAI and BAI_CV, with interesting results. It looks like I've got a lot more to do on this, because there are a lot of possible complications and I haven't explored all model space with all species. However, I probably need to figure out which ones aren't normal before I go too much farther and start trying to fix that before I search for too much inference from the marginally significant species.
+Interesting observations:
+The species that show no effect of Elev on mean BAI also tend to show little effect of competition.
+The species that show effects of Elev on mean BAI tend to show effects of Elev on CV of BAI.
+
+
+7/31/15
+Verifying quality of rw data for Cd-Synchrony analysis:
+- no internal NAs in any species, so no need to infill
+- cleaned all species at all locations and updated all deleted sections in CoreTraker_2013 spreadsheet. was reasonably conservative on pretty much everything. Deleted most light red highlighted things (except WA-ABLA-L-4C/N because both trees crazy and prob need the sample size). Infilled a very few internal gaps with 10yr average when there wasn't another core to draw off of.
+created new spreadsheets _avgRingWidth_7_31_15.csv that should be used for all analyses
+
+8/8/15
+working on Synchrony analysis
+-updated core_trunc to handle spreadsheet with colnames as "X2013" and NAs rather than NaNs (these are how the csv imports, but core_average spits out "2013" and NaNs instead). Also suppressed the warning in the code when columns are in "X2013" format
+added in code to detrend all rw data and create full df and dfs cut to the shortest core (noted in the Cd how short the shortest core was)
+Made paircors function to put together Ailene's mishmashed code, and ran for all cull and cut dfs.
+For most things, the full and cut results are pretty similar. But for all ABLA
+and for WA_PSME things differ quite a bit. For Mt, they even change sign!!!
+
+I added some code to see how the full and cut coefficients stack up.
+In general, the cut versions are larger. Sometimes (ie. in ABLA) this is disproportionately shown in one elev --> thus the problems.
+
+9/5/15
+After making a bunch of scripts to clean climate, to clean and average all RW, and to put climate and RW together and scale climate, I've decided I need to dive into the climate data a bit more. 
+CMD never goes negative in the winter. 
+PAS is actually just the amount of snow not %
+Eref is strange
+Rad is strange. only goes back to 1949 and then is 0 pre 49 and in 2012
+** Want to calculate some gs and ds stuff (it looks like 05-10 is gs for MT and WA, and prob for CO too, though CO_ABLA really doesn't start cranking until 06-09)
+For doing this, I could make a cutoff, something like mean DD5 > 20 or NFFD >10 or something
+But bottom line: need to edit my "Climate Prep" code
+
+
+10/30/15
+Finally getting back. The goal is to put together something passable for HRL lab meeting next week.
+But eventually I need to:
+1) Clean up file structure
+2) Clean up, comment, and unify code
+3) move to github so I can keep things version controled
+
+For today, the goal is to
+1) plot synchrony, growth, and growth CV for presentation
+2) make a quick and dirty model to test importance of climate for all trees
+3) plot climate sensitivity f(% max growth) for all trees
+4) plot climate normal figures again
+5) plot old vs new climate normals to get a sense how things are changing
+
+
+SYNCHRONGY RESULTS:
+**cut vs uncut: **
+- Doesn't matter too too much for everything except ABLA everywhere
+
+With Cut data:
+CO_PIPO - p=0.0001, decreasing, changing variance
+CO_POTR p<0.0001, decreasing, changing variance
+CO_ABLA - p<0.0001, decreasing, no change in variance
+
+MT_TSHE - p<0.0001, decreasing, changing variance
+MT_PSME - p<0.0001, increasing, changing variance
+MT_ABLA - p<0.0001, increasing, no change in variance
+
+WA_TSHE - p<0.0001, increasing, no change in variance
+WA_PSME - p<0.0001, humped, no change in variance
+WA_ABLA - p<0.0001, increasing, no change in variance
+
+
+### Made new script for putting together the elevational summary data from
+Cd-Synchrony.R
+& Cd-BAI-vs-ElevComp.R
+to combine BAI, BAIcv, and synchrony
+
+Then made some plot of the three against each other.
+Take Homes: BAIcv and Syncrhony are generally positively correlated, but not as strongly as you'd think
+Some species show downward trends in CV and synchrony with increasing BAI, but most don't. ABLA in particular is funky. Nothing jumps out from the elevation averages quite like I was hoping.
+
+
+## SENSITIVITY TO COMPETITON:
+started diving in to this. In compselect() there are currently not Band * DBH or Band * comp interactions.
+-plotting BAI10yr~DBH seems to suggest there's no change in the relationship for anything except
+MT_TSHE
+WA_TSHE
+-however, it
+** Also, probably need to check out colinearity among predictors again to make sure I'm not screwing things up. In general, it looks like
+1) most strong colinearity is among related variables (BA_tot and other BAs)
+2) N_Cr is often highly correlated with in5
+3) sometimes BA_ and in5_ variables are correlated.
+4) ACF is almost never correlated.
+Dicked around with corvif variance inflation factors: can't include both in5_same and in5_other (or BA_) because shit explodes. So just trying N_Cr, BA_tot, in5_tot, and ACF plus a gander at mypairs()
+Also can't get CO_PIPO to work, so just looking at mypairs() to get colinearity
+
+CO_PIPO: N_Cr and in5_tot + ACF and BA_tot and in5_same real correlated
+CO_POTR: BA_tot & in5_tot 0.66 + N_Cr & BA_tot 0.54, but VIFs not so bad?
+CO_ABLA: almsot all of them corr>0.6 , but VIFs ok? even with cutoff=3 we're still good
+
+MT_TSHE: N_Cr & in5_tot > 0.6, but all vifs look fine
+MT_PSME: N_Cr & in5_tot>0.6, N_Cr & BA_tot >0.5, but VIFs look fine
+MT_ABLA: nothing >0.6 (BA_other & in5_other=0.78, but they're ok), VIFs look fine
+
+WA_TSHE: only N_Cr & in5_tot =0.58, but VIFs all look good
+WA_PSME: looks great!
+WA_ABLA: looks fine!
+
+In general, it looks like VIFs say things are fine in general.
+
+# now I added some interaction terms (only 1 way interactions) into compselection()
+# There is graphical evidence for an interaction in:
+All CO trees
+MT_ABLA
+WA_ABLA
+
+# *****however, ther is only statistical evidence for an interaction in WA_ABLA!!!!!
+
+
+################################################################
+### 12/07/15: started trying to clean up code and documentation
+
+- did some cursory cleanup of Cd-Combining_BAI-Syncrhony_Sumstats.R
+- created new code (Cd-RandomForests_Varselection.R) to try out machine learning climate variable selection
+- also vowed to get better at documenting, commenting, and organizing code.
+this is a tall order, and don't know whether I should first tackle this by using R-markdown, setting up a project in Git, or something else.

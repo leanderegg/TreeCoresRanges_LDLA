@@ -1,0 +1,32 @@
+Notes from Montana data Checks
+
+4/5/14
+
+DBH: looks like it's ok in ABLA across elevation, and decent in PSME.
+However, in TSHE, low elevation trees are WAAAAY bigger then mid and high
+
+BA_tot: looks like I did a decent job picking competative trees, with a couple exceptions. and looks like the average competative environment generally gets larger with decreasing elevation
+
+Conspecific basal area appears to decrease with elev for both TSHE and PSME. Mort doesn't show any super visible trends except being high at low elev for ABLA. this makes sense given what we saw in the field with the moss and whatnot.
+
+REGEN:
+GAH- have data entry issues, at least with PSME_r1!!!!!
+Also have issues with size class 5s and size class ts
+-ended up deleting ts and 5s for sake of plotting. 
+*******MIGHT HAVE TO CHANGE THIS (at least in WA transect?)
+
+
+Notes from WA assumptions check
+
+4/18/14
+
+DBH: Actually varies less with elevation than in any of my other transects. The only thing that stands out is larger PSMEs at high elevation (which I knew already)
+
+BA_tot: looks like I somehow totally shanked PSME High. The low comp actually typically has higher BA_tot than high comp... hmmmm.
+- However, for the first time ever it looks like the competition is actually pretty similar across elevations. Wohoo!
+
+MORT: looks like pretty similar for all TSHE and PSME, but SUPER high at low elevations for ABLA. this is due to that crazy mortality even that I ran into at low elevations. Not sure the generalizability of this, but certainly interesting.
+** Note, this is true of % mortality, but not of total mortality. Total Mortality
+is pretty constand at Low and Mid elevations.
+
+REGEN:

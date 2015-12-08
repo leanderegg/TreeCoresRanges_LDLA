@@ -1,0 +1,31 @@
+CLEANING DATA: things I had to change
+
+3/29/14
+Continued cleaning MT-
+1) Had to combine LARVIX and LOAC columns in _cleaning3_6_14.xlsx and correct BA calcs
+***2) Haven't completed BA calcs for either MT or WA - Also need to finish w/in 5 m calcs
+3) MT-ABLA-H-5 (N & C) + MT-ABLA-H-7 (N&C) were actually from the L band and entered wrong (i.e. there were two of each).
+I changed the four trees with elevations in the 1600 range to the L elevation band. - I initially messed up again and switched them to
+M band, but I think I got everything corrected. I then resorted.
+4) Also got rid of the MT in a couple of the full tag names for consistency
+
+3/31/14
+Made a tabulation to send to GNP, and realized that PSME-H-5 & 8 were mislabeled L. changed based on elevation and resorted
+
+
+4/5/2014
+added in caclulations for w/in 5m in MT. realized Larvix and LAOC columns somehow hadn't been combined correctly and had to do it again.
+
+-MT-PSME-H-7C, missed decimal point in DBH. added to cleaning and to "withcalcs"
+
+NEED TO CHECK BAF for PSME-L-8C, TSHE-H-4C, TSHE-H-10C
+with the exception of PSME-L-8C, could just not have any conspecifics in plot
+
+4/7/2014
+edited ABLA and PSME regen to get rid of the t's that were as comma'd entries in the 1s column
+-need to check this still though.
+
+4/17/2014
+some MT trees (ABLA-L and PSME-H) were in the WA spreadsheet. I moved them to a seperate spreadsheet at the end but can probably delete them if everything is already in the MT spreadsheet. Could also use it to QC MT trees and see how well we did.
+
+- ******* Some of the PSME High BA might be wrong? maybe that's what made the BA_tot values so crazy?
